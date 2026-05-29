@@ -5,8 +5,18 @@ Group Name: ???
 <?php require 'libs/authpage.php'; ?>
 <?php require 'libs/db_connect_PDO.php'; ?>
 <?php
-$keywordMenu = "";
-$sortMenu = "type,name";
+$keywordMenu = isset($_REQUEST['keywordMenu']) ? trim($_REQUEST['keywordMenu']) : "";
+$sortMenu = isset($_REQUEST['sortMenu']) ? $_REQUEST['sortMenu'] : "type,name";
+
+$sortOptions = [
+  'name' => 'name',
+  'type,name' => 'type, name',
+  'price' => 'price'
+];
+
+if (!isset($sortOptions[$sortMenu])) {
+  $sortMenu = "type,name";
+}
 
 // Assume that no field is being selected to sort the menu rows
 $sortFields = ['name'=>'', 'type,name'=>'', 'price'=>''];
@@ -15,7 +25,8 @@ $sortFields = ['name'=>'', 'type,name'=>'', 'price'=>''];
 $sortFields[$sortMenu] = "***";
 
 // Construct the SQL to list menu based on $keywordMenu and $sortMenu variable
-$stmt = $pdo->prepare("SELECT * FROM menus WHERE name LIKE :keyword OR type LIKE :keyword ORDER BY $sortMenu");
+$sortSql = $sortOptions[$sortMenu];
+$stmt = $pdo->prepare("SELECT * FROM menus WHERE name LIKE :keyword OR type LIKE :keyword ORDER BY $sortSql");
   
 try {
   $stmt->execute([':keyword'=>"%$keywordMenu%"]);
@@ -58,8 +69,8 @@ try {
     <td>
       <h2>Manage Menu Item</h2>
       <div style="text-align: right">
-        <form action="MenuManage.php" method="POST">
-          <b>Search:</b> <input type="text" name="keywordMenu" value="<?= $keywordMenu ?>"> <button type="submit">Submit</button>
+        <form action="MenuManage.php" method="GET">
+          <b>Search:</b> <input type="text" name="keywordMenu" value="<?= htmlspecialchars($keywordMenu) ?>"> <button type="submit">Submit</button>
         </form>
       </div>
       <br>
@@ -67,9 +78,9 @@ try {
         <tr>
           <th>No.</th>
           <th>ID</th>
-          <th><a href="MenuManage.php?sortMenu=name">Name<?= $sortFields['name'] ?></a></th>
-          <th><a href="MenuManage.php?sortMenu=type,name">Type <?= $sortFields['type,name'] ?></a></th>
-          <th><a href="MenuManage.php?sortMenu=price">Price (RM) <?= $sortFields['price'] ?></a></th>
+          <th><a href="MenuManage.php?sortMenu=name&keywordMenu=<?= urlencode($keywordMenu) ?>">Name<?= $sortFields['name'] ?></a></th>
+          <th><a href="MenuManage.php?sortMenu=type,name&keywordMenu=<?= urlencode($keywordMenu) ?>">Type <?= $sortFields['type,name'] ?></a></th>
+          <th><a href="MenuManage.php?sortMenu=price&keywordMenu=<?= urlencode($keywordMenu) ?>">Price (RM) <?= $sortFields['price'] ?></a></th>
           <th>Operations</th>
         </tr>
 <?php 
@@ -83,8 +94,8 @@ while ($row = $stmt->fetch()) {
           <td align="center"><?= $row['type'] ?></td>
           <td align="right"><?= number_format($row['price'], 2) ?></td>
           <td align="center">
-            <a href="">Update</a> | 
-            <a href="">Delete</a>
+            <a href="MenuUpdate.php?id=<?= $row['id'] ?>">Update</a> | 
+            <a href="MenuDelete.php?id=<?= $row['id'] ?>">Delete</a>
           </td>
         </tr>
 <?php 
@@ -98,7 +109,7 @@ while ($row = $stmt->fetch()) {
           <td align="center">...</td>
           <td align="right">...</td>
           <td align="center">
-            <a href="">Add</a>
+            <a href="MenuAdd.php">Add</a>
           </td>
         </tr>
       </table>

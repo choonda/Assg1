@@ -5,14 +5,27 @@ Group Name: ???
 <?php require 'libs/authpage.php'; ?>
 <?php require 'libs/db_connect_PDO.php'; ?>
 <?php 
-$task = $_REQUEST['task'];
+$task = isset($_REQUEST['task']) ? $_REQUEST['task'] : "";
 $form_complete = FALSE;
 
 if ($task == "Cancel") {
-    // ???
-    
+    header("Location: MenuManage.php");
+    exit;
 } else if ($task == "Add") {
-  // ???
+  $stmt = $pdo->prepare("INSERT INTO menus (name, type, price) VALUES (:name, :type, :price)");
+
+  try {
+    $stmt->execute([
+      ':name' => $_POST['name'],
+      ':type' => $_POST['type'],
+      ':price' => $_POST['price']
+    ]);
+
+    header("Location: MenuManage.php");
+    exit;
+  } catch (PDOException $ex) {
+    echo "Database Error: " . $ex->getMessage();
+  }
 }
 ?>
 
